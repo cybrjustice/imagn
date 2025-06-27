@@ -3,47 +3,74 @@
 <head>
   <meta charset="UTF-8">
   <title>Melody Auth Gateway Test</title>
+  <style>
+    body { font-family: sans-serif; padding: 2em; background: #fafbfc; color: #222; }
+    button { margin: 4px 0; padding: 8px 16px; font-size: 1em; }
+    pre { background: #f0f0f0; padding: 8px; border-radius: 4px; }
+    #img { margin-top: 1em; max-width: 400px; display: none; border: 1px solid #ccc; }
+    .ok { color: green; }
+    .err { color: red; }
+  </style>
 </head>
 <body>
   <button id="auth">Send Melody Auth</button>
   <pre id="auth-res"></pre>
   <button id="gen">Generate Image</button>
   <pre id="gen-res"></pre>
-  <img id="img" style="max-width:400px; display:none;"/>
+  <img id="img" alt="Result" />
 
   <script>
-    // Update this if your deployed endpoint changes:
+    // CHANGE THIS if your deployed endpoint is different
     const API = "https://imagen.ai-n.workers.dev";
     const melody = ["C4","D4","E4","C4","D4","E4","C4","G4","D4"];
 
+    // Melody Auth
     document.getElementById("auth").onclick = async () => {
       document.getElementById("auth-res").textContent = "Sending...";
-      const res = await fetch(API + "/auth/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ attempt: melody })
-      });
-      document.getElementById("auth-res").textContent = await res.text();
+      document.getElementById("auth-res").className = "";
+      try {
+        const res = await fetch(API + "/auth/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ attempt: melody })
+        });
+        const txt = await res.text();
+        document.getElementById("auth-res").textContent = txt;
+        document.getElementById("auth-res").className = res.ok && txt.includes('"success":true') ? "ok" : "err";
+      } catch (e) {
+        document.getElementById("auth-res").textContent = e.toString();
+        document.getElementById("auth-res").className = "err";
+      }
     };
 
+    // Generate Image
     document.getElementById("gen").onclick = async () => {
       document.getElementById("gen-res").textContent = "Requesting...";
-      const res = await fetch(API + "/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ type: "artwork", prompt: "cat" })
-      });
-      if (res.ok && res.headers.get("Content-Type") === "image/png") {
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        document.getElementById("img").src = url;
-        document.getElementById("img").style.display = '';
-        document.getElementById("gen-res").textContent = "Success!";
-      } else {
-        document.getElementById("gen-res").textContent = await res.text();
-        document.getElementById("img").style.display = 'none';
+      document.getElementById("gen-res").className = "";
+      document.getElementById("img").style.display = 'none';
+      try {
+        const res = await fetch(API + "/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ type: "artwork", prompt: "cat" })
+        });
+        if (res.ok && res.headers.get("Content-Type") === "image/png") {
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          document.getElementById("img").src = url;
+          document.getElementById("img").style.display = '';
+          document.getElementById("gen-res").textContent = "Success!";
+          document.getElementById("gen-res").className = "ok";
+        } else {
+          const txt = await res.text();
+          document.getElementById("gen-res").textContent = txt;
+          document.getElementById("gen-res").className = "err";
+        }
+      } catch (e) {
+        document.getElementById("gen-res").textContent = e.toString();
+        document.getElementById("gen-res").className = "err";
       }
     };
   </script>
