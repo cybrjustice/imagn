@@ -1,51 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Image Gateway with Melody Auth</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>Melody Auth Gateway Test</title>
 </head>
 <body>
-  <main>
-    <h1>Image Gateway</h1>
-    <section id="auth-section">
-      <h2>Play the Melody to Unlock</h2>
-      <div id="piano"></div>
-      <div id="notes-input"></div>
-      <button id="auth-submit" disabled>Submit Melody</button>
-      <button id="auth-clear" type="button">Clear</button>
-      <div id="auth-status"></div>
-    </section>
-    <section id="gen-section" style="display:none;">
-      <h2>Generate an Image</h2>
-      <form id="gen-form" autocomplete="off">
-        <div>
-          <label>Type:
-            <select id="type" required>
-              <option value="blueprint">Blueprint</option>
-              <option value="artwork">Artwork</option>
-              <option value="tattoo">Tattoo</option>
-            </select>
-          </label>
-        </div>
-        <div>
-          <label for="prompt">Prompt:</label>
-          <input id="prompt" required />
-        </div>
-        <div id="prompt-helpers"></div>
-        <button type="submit" id="gen-submit">Generate Image</button>
-      </form>
-      <div id="gen-status"></div>
-      <div id="result-container" style="display:none; text-align:center;">
-        <img id="result-img" alt="Generated result" style="display:block;max-width:100%;margin:1em auto;" />
-        <div style="margin-top:1em;">
-          <button id="download-btn">Download Image</button>
-          <button id="revise-btn">Revise</button>
-        </div>
-      </div>
-    </section>
-  </main>
-  <script src="script.js"></script>
+  <button id="auth">Send Melody Auth</button>
+  <pre id="auth-res"></pre>
+  <button id="gen">Generate Image</button>
+  <pre id="gen-res"></pre>
+  <img id="img" style="max-width:400px; display:none;"/>
+
+  <script>
+    // Update this if your deployed endpoint changes:
+    const API = "https://imagen.ai-n.workers.dev";
+    const melody = ["C4","D4","E4","C4","D4","E4","C4","G4","D4"];
+
+    document.getElementById("auth").onclick = async () => {
+      document.getElementById("auth-res").textContent = "Sending...";
+      const res = await fetch(API + "/auth/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ attempt: melody })
+      });
+      document.getElementById("auth-res").textContent = await res.text();
+    };
+
+    document.getElementById("gen").onclick = async () => {
+      document.getElementById("gen-res").textContent = "Requesting...";
+      const res = await fetch(API + "/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ type: "artwork", prompt: "cat" })
+      });
+      if (res.ok && res.headers.get("Content-Type") === "image/png") {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        document.getElementById("img").src = url;
+        document.getElementById("img").style.display = '';
+        document.getElementById("gen-res").textContent = "Success!";
+      } else {
+        document.getElementById("gen-res").textContent = await res.text();
+        document.getElementById("img").style.display = 'none';
+      }
+    };
+  </script>
 </body>
 </html>
