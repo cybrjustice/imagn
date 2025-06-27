@@ -1,8 +1,7 @@
-// --- Melody Auth Logic with Piano Sound and Improvements ---
-const KEYBOARD = "QWERTYUIOP[]\\"; // 2 octaves, white keys only
+const KEYBOARD = "QWERTYUIOP[]\\";
 const NOTES = [
-  "C4","D4","E4","F4","G4","A4","B4", // QWERTYUI
-  "C5","D5","E5","F5","G5","A5","B5"  // OP[]\
+  "C4","D4","E4","F4","G4","A4","B4",
+  "C5","D5","E5","F5","G5","A5","B5"
 ];
 const KEY_TO_NOTE = Object.fromEntries(KEYBOARD.split('').map((key,i)=>[key,NOTES[i]]));
 
@@ -11,7 +10,6 @@ let playedNotes = [];
 
 const $ = sel => document.querySelector(sel);
 
-// --- Prompt Helper Definitions ---
 const PROMPT_HELPERS = {
   blueprint: [
     "A detailed floor plan of a futuristic house",
@@ -37,7 +35,6 @@ function showPromptHelpers() {
   container.innerHTML = helpers.map(h =>
     `<button type="button" class="helper-btn">${h}</button>`
   ).join('');
-  // Add click listeners to insert the helper into the input
   document.querySelectorAll('.helper-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       $('#prompt').value = btn.textContent;
@@ -48,7 +45,6 @@ function showPromptHelpers() {
 // --- Piano Sound Setup ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const NOTE_FREQS = (() => {
-  // Calculate frequencies for C4 (MIDI 60) to B5 (MIDI 83)
   const baseMidi = 60, baseFreq = 261.63;
   let out = {};
   NOTES.forEach((note, i) => {
@@ -64,7 +60,7 @@ function playNote(note, duration = 0.22, velocity = 0.7) {
   const gain = audioCtx.createGain();
   osc.type = "triangle";
   osc.frequency.value = freq;
-  gain.gain.value = velocity * 1.4; // Louder
+  gain.gain.value = velocity * 1.4;
   osc.connect(gain).connect(audioCtx.destination);
   osc.start();
   gain.gain.setValueAtTime(gain.gain.value, audioCtx.currentTime);
@@ -116,9 +112,7 @@ function resetMelody() {
 }
 
 document.addEventListener('keydown', e => {
-  // Ignore if in input/textarea
   if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
-
   if (e.key === "Backspace") {
     if (playedNotes.length > 0) {
       playedNotes.pop();
@@ -127,7 +121,6 @@ document.addEventListener('keydown', e => {
     e.preventDefault();
     return;
   }
-
   const key = e.key.length === 1 ? e.key.toUpperCase() : '';
   const note = KEY_TO_NOTE[key];
   if (note && playedNotes.length < melodyLength) {
@@ -139,13 +132,13 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// --- API URLs (adjust if deploying elsewhere) ---
 const API_BASE = "https://imagen.ai-n.workers.dev";
 
-// --- Melody Auth API ---
 async function fetchMelodyChallenge() {
   try {
-    const res = await fetch(`${API_BASE}/auth/challenge`);
+    const res = await fetch(`${API_BASE}/auth/challenge`, {
+      credentials: "include"
+    });
     if (!res.ok) return;
     const data = await res.json();
     melodyLength = data.melody || 4;
@@ -159,6 +152,7 @@ async function submitMelody() {
     const res = await fetch(`${API_BASE}/auth/verify`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ attempt: playedNotes })
     });
     const data = await res.json();
@@ -196,9 +190,13 @@ $('#gen-form').addEventListener('submit', async e => {
     const res = await fetch(`${API_BASE}/generate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ type, prompt })
     });
-    if (!res.ok) throw new Error("Generation failed");
+    if (!res.ok) {
+      const msg = await res.text();
+      throw new Error(`${res.status} ${msg}`);
+    }
     const blob = await res.blob();
     lastBlob = blob;
     const url = URL.createObjectURL(blob);
@@ -213,7 +211,6 @@ $('#gen-form').addEventListener('submit', async e => {
   $('#gen-submit').disabled = false;
 });
 
-// --- Download Button Logic ---
 $('#download-btn').addEventListener('click', () => {
   if (!lastBlob) return;
   const a = document.createElement('a');
@@ -224,7 +221,6 @@ $('#download-btn').addEventListener('click', () => {
   setTimeout(() => document.body.removeChild(a), 100);
 });
 
-// --- Revise Button Logic ---
 $('#revise-btn').addEventListener('click', () => {
   $('#result-container').style.display = 'none';
   $('#result-img').src = '';
@@ -234,7 +230,6 @@ $('#revise-btn').addEventListener('click', () => {
   $('#prompt').focus();
 });
 
-// --- Add Clear Button Logic ---
 $('#auth-clear').addEventListener('click', () => {
   resetMelody();
 });
