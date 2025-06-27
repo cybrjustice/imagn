@@ -93,3 +93,30 @@ button:disabled {
   text-align: center;
   color: #ffb84d;
 }
+#prompt-helpers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  margin-bottom: 1em;
+  justify-content: center;
+}
+.helper-btn {
+  background: #222;
+  color: #0dc8de;
+  border: 1px solid #0dc8de;
+  border-radius: 4px;
+  padding: 0.25em 0.75em;
+  font-size: 0.95em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.helper-btn:hover {
+  background: #0dc8de;
+  color: #222;
+}
+#result-container {
+  margin-top: 1.5em;
+}
+#download-btn, #revise-btn {
+  margin-right: 0.5em;
+}
