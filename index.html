@@ -33,10 +33,17 @@
           <label for="prompt">Prompt:</label>
           <input id="prompt" required />
         </div>
-        <button type="submit">Generate Image</button>
+        <div id="prompt-helpers"></div>
+        <button type="submit" id="gen-submit">Generate Image</button>
       </form>
       <div id="gen-status"></div>
-      <img id="result-img" alt="Generated result" style="display:none;max-width:100%;margin-top:1em;" />
+      <div id="result-container" style="display:none; text-align:center;">
+        <img id="result-img" alt="Generated result" style="display:block;max-width:100%;margin:1em auto;" />
+        <div style="margin-top:1em;">
+          <button id="download-btn">Download Image</button>
+          <button id="revise-btn">Revise</button>
+        </div>
+      </div>
     </section>
   </main>
   <script src="script.js"></script>
