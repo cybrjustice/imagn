@@ -11,6 +11,40 @@ let playedNotes = [];
 
 const $ = sel => document.querySelector(sel);
 
+// --- Prompt Helper Definitions ---
+const PROMPT_HELPERS = {
+  blueprint: [
+    "A detailed floor plan of a futuristic house",
+    "Mechanical schematic of a flying car",
+    "Blueprint of a steampunk airship"
+  ],
+  artwork: [
+    "A serene landscape with mountains at sunset",
+    "Surreal portrait of a person made of flowers",
+    "Cyberpunk city skyline at night"
+  ],
+  tattoo: [
+    "Minimalist line drawing of a wolf",
+    "Traditional Japanese koi fish",
+    "Geometric mandala with fine lines"
+  ]
+};
+
+function showPromptHelpers() {
+  const type = $('#type').value;
+  const helpers = PROMPT_HELPERS[type] || [];
+  const container = $('#prompt-helpers');
+  container.innerHTML = helpers.map(h =>
+    `<button type="button" class="helper-btn">${h}</button>`
+  ).join('');
+  // Add click listeners to insert the helper into the input
+  document.querySelectorAll('.helper-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $('#prompt').value = btn.textContent;
+    });
+  });
+}
+
 // --- Piano Sound Setup ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const NOTE_FREQS = (() => {
@@ -106,7 +140,7 @@ document.addEventListener('keydown', e => {
 });
 
 // --- API URLs (adjust if deploying elsewhere) ---
-const API_BASE = "https://imagen.ai-n.workers.dev"; // same origin
+const API_BASE = "https://imagen.ai-n.workers.dev";
 
 // --- Melody Auth API ---
 async function fetchMelodyChallenge() {
@@ -146,10 +180,15 @@ async function submitMelody() {
 }
 
 // --- Image Generation Logic ---
+let lastImageUrl = null;
+let lastBlob = null;
+
 $('#gen-form').addEventListener('submit', async e => {
   e.preventDefault();
   $('#gen-status').textContent = "Generating...";
   $('#result-img').style.display = 'none';
+  $('#result-container').style.display = 'none';
+  $('#gen-submit').disabled = true;
 
   const type = $('#type').value;
   const prompt = $('#prompt').value;
@@ -161,13 +200,38 @@ $('#gen-form').addEventListener('submit', async e => {
     });
     if (!res.ok) throw new Error("Generation failed");
     const blob = await res.blob();
+    lastBlob = blob;
     const url = URL.createObjectURL(blob);
+    lastImageUrl = url;
     $('#result-img').src = url;
-    $('#result-img').style.display = '';
+    $('#result-img').style.display = 'block';
+    $('#result-container').style.display = '';
     $('#gen-status').textContent = "Done!";
   } catch (err) {
     $('#gen-status').textContent = "Error: " + err.message;
   }
+  $('#gen-submit').disabled = false;
+});
+
+// --- Download Button Logic ---
+$('#download-btn').addEventListener('click', () => {
+  if (!lastBlob) return;
+  const a = document.createElement('a');
+  a.href = lastImageUrl;
+  a.download = 'generated-image.png';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => document.body.removeChild(a), 100);
+});
+
+// --- Revise Button Logic ---
+$('#revise-btn').addEventListener('click', () => {
+  $('#result-container').style.display = 'none';
+  $('#result-img').src = '';
+  $('#gen-status').textContent = '';
+  $('#gen-form').reset();
+  showPromptHelpers();
+  $('#prompt').focus();
 });
 
 // --- Add Clear Button Logic ---
@@ -178,8 +242,8 @@ $('#auth-clear').addEventListener('click', () => {
 // --- Init ---
 renderPiano();
 fetchMelodyChallenge();
-
+$('#type').addEventListener('change', showPromptHelpers);
+showPromptHelpers();
 $('#auth-submit').addEventListener('click', submitMelody);
 $('#notes-input').addEventListener('click', resetMelody);
-
 updateNotesInput();
