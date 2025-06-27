@@ -106,7 +106,8 @@ document.addEventListener('keydown', e => {
 });
 
 // --- API URLs (adjust if deploying elsewhere) ---
-const API_BASE = ""; // same origin
+const API_BASE = "https://imagen.ai-n.workers.dev
+"; // same origin
 
 // --- Melody Auth API ---
 async function fetchMelodyChallenge() {
