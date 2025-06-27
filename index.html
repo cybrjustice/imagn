@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Image Gateway with Melody Auth</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main>
+    <h1>Image Gateway</h1>
+    <section id="auth-section">
+      <h2>Play the Melody to Unlock</h2>
+      <div id="piano"></div>
+      <div id="notes-input"></div>
+      <button id="auth-submit" disabled>Submit Melody</button>
+      <button id="auth-clear" type="button">Clear</button>
+      <div id="auth-status"></div>
+    </section>
+    <section id="gen-section" style="display:none;">
+      <h2>Generate an Image</h2>
+      <form id="gen-form" autocomplete="off">
+        <div>
+          <label>Type:
+            <select id="type" required>
+              <option value="blueprint">Blueprint</option>
+              <option value="artwork">Artwork</option>
+              <option value="tattoo">Tattoo</option>
+            </select>
+          </label>
+        </div>
+        <div>
+          <label for="prompt">Prompt:</label>
+          <input id="prompt" required />
+        </div>
+        <button type="submit">Generate Image</button>
+      </form>
+      <div id="gen-status"></div>
+      <img id="result-img" alt="Generated result" style="display:none;max-width:100%;margin-top:1em;" />
+    </section>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
